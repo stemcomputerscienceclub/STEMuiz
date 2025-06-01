@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../contexts/ToastContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 export default function CreateQuiz() {
   const router = useRouter();
@@ -10,7 +12,14 @@ export default function CreateQuiz() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [questions, setQuestions] = useState([
-    { question: '', options: ['', '', '', ''], correctIndex: 0, timeLimit: 20, imageUrl: '' }
+    {
+      question: '',
+      options: ['', '', '', ''],
+      correctIndex: 0,
+      timeLimit: 30,
+      points: 1000,
+      imageUrl: null
+    }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -42,7 +51,14 @@ export default function CreateQuiz() {
   const addQuestion = () => {
     setQuestions([
       ...questions,
-      { question: '', options: ['', '', '', ''], correctIndex: 0, timeLimit: 20, imageUrl: '' }
+      {
+        question: '',
+        options: ['', '', '', ''],
+        correctIndex: 0,
+        timeLimit: 30,
+        points: 1000,
+        imageUrl: null
+      }
     ]);
   };
 
@@ -95,7 +111,8 @@ export default function CreateQuiz() {
             options: q.options,
             correct_index: q.correctIndex,
             time_limit: q.timeLimit,
-            image_url: q.imageUrl
+            image_url: q.imageUrl,
+            points: q.points
           }]);
         if (questionError) throw questionError;
       }
@@ -153,57 +170,69 @@ export default function CreateQuiz() {
         {/* Questions */}
         <div className="space-y-6">
           {questions.map((question, qIndex) => (
-            <div key={qIndex} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Question {qIndex + 1}</h3>
+            <div key={qIndex} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg space-y-4 border border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Question {qIndex + 1}</h3>
                 {questions.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeQuestion(qIndex)}
                     className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                   >
-                    Remove
+                    <FontAwesomeIcon icon={faTrash} />
                   </button>
                 )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Question Text
+                  Question
                 </label>
                 <input
                   type="text"
                   value={question.question}
                   onChange={(e) => handleQuestionChange(qIndex, 'question', e.target.value)}
+                  placeholder="Enter your question"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700"
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Image URL (Optional)
-                </label>
-                <input
-                  type="url"
-                  value={question.imageUrl}
-                  onChange={(e) => handleQuestionChange(qIndex, 'imageUrl', e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700"
-                />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Time Limit (seconds)
+                  </label>
+                  <select
+                    value={question.timeLimit}
+                    onChange={(e) => handleQuestionChange(qIndex, 'timeLimit', parseInt(e.target.value))}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700"
+                  >
+                    <option value={5}>5 seconds</option>
+                    <option value={10}>10 seconds</option>
+                    <option value={20}>20 seconds</option>
+                    <option value={30}>30 seconds</option>
+                    <option value={45}>45 seconds</option>
+                    <option value={60}>60 seconds</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Points
+                  </label>
+                  <select
+                    value={question.points}
+                    onChange={(e) => handleQuestionChange(qIndex, 'points', parseInt(e.target.value))}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700"
+                  >
+                    <option value={500}>500 points</option>
+                    <option value={1000}>1000 points</option>
+                    <option value={1500}>1500 points</option>
+                    <option value={2000}>2000 points</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Time Limit (seconds)
-                </label>
-                <select
-                  value={question.timeLimit}
-                  onChange={(e) => handleQuestionChange(qIndex, 'timeLimit', parseInt(e.target.value))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700"
-                >
-                  <option value={5}>5 seconds</option>
-                  <option value={10}>10 seconds</option>
-                  <option value={20}>20 seconds</option>
-                  <option value={30}>30 seconds</option>
-                </select>
-              </div>
+              
               <div className="space-y-3">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Options

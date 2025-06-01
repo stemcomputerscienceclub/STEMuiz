@@ -1,6 +1,3 @@
--- Force reset the schema cache
-SELECT pg_catalog.pg_reload_conf();
-
 -- Disable RLS temporarily
 ALTER TABLE IF EXISTS public.players DISABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.game_sessions DISABLE ROW LEVEL SECURITY;
@@ -113,5 +110,44 @@ CREATE POLICY "Allow all access to game_sessions" ON public.game_sessions USING 
 DROP POLICY IF EXISTS "Allow all access to players" ON public.players;
 CREATE POLICY "Allow all access to players" ON public.players USING (true);
 
--- Refresh the schema again
-SELECT pg_catalog.pg_reload_conf(); 
+-- Add service role and host access policies
+DROP POLICY IF EXISTS "Service role access for game_sessions" ON public.game_sessions;
+CREATE POLICY "Service role access for game_sessions" ON public.game_sessions 
+  FOR ALL 
+  TO service_role
+  USING (true);
+
+DROP POLICY IF EXISTS "Host can manage their game sessions" ON public.game_sessions;
+CREATE POLICY "Host can manage their game sessions" ON public.game_sessions 
+  FOR ALL 
+  TO authenticated
+  USING (auth.uid() = host_id);
+
+DROP POLICY IF EXISTS "Service role access for players" ON public.players;
+CREATE POLICY "Service role access for players" ON public.players 
+  FOR ALL 
+  TO service_role
+  USING (true);
+
+DROP POLICY IF EXISTS "Authenticated users can view players" ON public.players;
+CREATE POLICY "Authenticated users can view players" ON public.players 
+  FOR SELECT 
+  TO authenticated
+  USING (true);
+
+-- Grant necessary permissions to all roles
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.game_sessions TO anon, authenticated, service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.players TO anon, authenticated, service_role;
+
+-- Ensure sequence permissions are granted
+DO $$
+DECLARE
+  seq_name text;
+BEGIN
+  FOR seq_name IN 
+    SELECT sequence_name FROM information_schema.sequences 
+    WHERE sequence_schema = 'public'
+  LOOP
+    EXECUTE format('GRANT USAGE, SELECT ON SEQUENCE public.%I TO anon, authenticated, service_role', seq_name);
+  END LOOP;
+END $$; 
