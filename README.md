@@ -1,6 +1,6 @@
 # STEMuiz
 
-A real-time quiz application for STEM subjects, built with Next.js, Socket.io, and MongoDB.
+A real-time quiz application for STEM High Schools, built with Next.js, Socket.io, and MongoDB.
 
 ![STEMuiz Screenshot](screenshot.png)
 
