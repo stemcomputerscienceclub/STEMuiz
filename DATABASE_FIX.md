@@ -115,4 +115,101 @@ If you're still experiencing issues:
 3. Make sure the service role key has full database access
 4. Try running small parts of the migration script separately
 
+### Common Errors
+
+#### ERROR: 42703: column "session_id" does not exist
+
+This error indicates the player_answers table is missing the session_id column. Run this SQL fix:
+
+```sql
+-- Simple fix for the session_id column in player_answers table
+DO $$
+BEGIN
+  -- Add session_id column if it doesn't exist
+  IF EXISTS (
+    SELECT FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'player_answers'
+  ) AND NOT EXISTS (
+    SELECT FROM information_schema.columns 
+    WHERE table_schema = 'public' 
+    AND table_name = 'player_answers' 
+    AND column_name = 'session_id'
+  ) THEN
+    -- Add session_id column
+    ALTER TABLE public.player_answers ADD COLUMN session_id UUID;
+    
+    -- Add foreign key constraint
+    ALTER TABLE public.player_answers ADD CONSTRAINT player_answers_session_id_fkey 
+      FOREIGN KEY (session_id) REFERENCES public.game_sessions(id) ON DELETE CASCADE;
+    
+    -- Create index for performance
+    CREATE INDEX player_answers_session_id_idx ON public.player_answers(session_id);
+    
+    -- Populate session_id from players table if possible
+    UPDATE public.player_answers pa
+    SET session_id = p.session_id
+    FROM public.players p
+    WHERE pa.player_id = p.id AND pa.session_id IS NULL;
+  END IF;
+END $$;
+```
+
+#### ERROR: Could not find a relationship between 'quizzes' and 'questions'
+
+This error occurs when the foreign key relationship between quizzes and questions is missing or broken. Fix it with this SQL:
+
+```sql
+-- Fix relationship between quizzes and questions tables
+DO $$
+BEGIN
+  -- Check if both tables exist
+  IF EXISTS (
+    SELECT FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'quizzes'
+  ) AND EXISTS (
+    SELECT FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'questions'
+  ) THEN
+    -- Check if quiz_id column exists in questions table
+    IF NOT EXISTS (
+      SELECT FROM information_schema.columns 
+      WHERE table_schema = 'public' 
+      AND table_name = 'questions' 
+      AND column_name = 'quiz_id'
+    ) THEN
+      -- Add quiz_id column
+      ALTER TABLE public.questions ADD COLUMN quiz_id UUID;
+      
+      -- Add foreign key constraint
+      ALTER TABLE public.questions ADD CONSTRAINT questions_quiz_id_fkey 
+        FOREIGN KEY (quiz_id) REFERENCES public.quizzes(id) ON DELETE CASCADE;
+      
+      -- Create index for better performance
+      CREATE INDEX questions_quiz_id_idx ON public.questions(quiz_id);
+    END IF;
+    
+    -- Also check relationship between questions and question_options
+    IF EXISTS (
+      SELECT FROM information_schema.tables 
+      WHERE table_schema = 'public' AND table_name = 'question_options'
+    ) AND NOT EXISTS (
+      SELECT FROM information_schema.columns 
+      WHERE table_schema = 'public' 
+      AND table_name = 'question_options' 
+      AND column_name = 'question_id'
+    ) THEN
+      -- Add question_id column
+      ALTER TABLE public.question_options ADD COLUMN question_id UUID;
+      
+      -- Add foreign key constraint
+      ALTER TABLE public.question_options ADD CONSTRAINT question_options_question_id_fkey 
+        FOREIGN KEY (question_id) REFERENCES public.questions(id) ON DELETE CASCADE;
+      
+      -- Create index for better performance
+      CREATE INDEX question_options_question_id_idx ON public.question_options(question_id);
+    END IF;
+  END IF;
+END $$;
+```
+
 For any additional questions or issues, please contact support. 
