@@ -419,7 +419,7 @@ export default function HostGame() {
           <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 shadow-xl">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
-                <FontAwesomeIcon icon={faUsers} className="text-2xl" />
+                <FontAwesomeIcon icon={faUsers} className="text-xl" />
                 <h2 className="text-2xl font-bold">Players ({players.length})</h2>
               </div>
               
@@ -428,7 +428,7 @@ export default function HostGame() {
                 disabled={players.length === 0}
                 className="px-8 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white text-lg font-bold rounded-xl transition-all"
               >
-                <FontAwesomeIcon icon={faPlay} className="mr-2" />
+                <FontAwesomeIcon icon={faPlay} className="mr-2 text-base" />
                 Start Game
               </button>
             </div>
@@ -459,7 +459,7 @@ export default function HostGame() {
                 </div>
                 <button
                   onClick={toggleCorrectAnswer}
-                  className={`px-4 py-2 ${showCorrectAnswer ? 'bg-green-600' : 'bg-gray-600'} rounded-lg`}
+                  className={`px-4 py-2 ${showCorrectAnswer ? 'bg-green-600' : 'bg-gray-600'} rounded-lg text-sm`}
                   title={showCorrectAnswer ? "Hide correct answer" : "Show correct answer"}
                 >
                   {showCorrectAnswer ? "Hide Answer" : "Show Answer"}
@@ -467,7 +467,7 @@ export default function HostGame() {
                 {!showLeaderboard ? (
                   <button
                     onClick={handleSkip}
-                    className="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg"
+                    className="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm"
                   >
                     Skip
                   </button>
@@ -478,7 +478,7 @@ export default function HostGame() {
                       currentQuestionIndex === gameSession.quiz.questions.length - 1 
                         ? 'bg-red-600 hover:bg-red-700' 
                         : 'bg-green-600 hover:bg-green-700'
-                    } text-white rounded-lg`}
+                    } text-white rounded-lg text-sm`}
                   >
                     {currentQuestionIndex === gameSession.quiz.questions.length - 1 ? 'End Game' : 'Next'}
                   </button>
@@ -519,9 +519,11 @@ export default function HostGame() {
                         <div className="flex justify-between items-center">
                           <span>{option}</span>
                           {playerCount > 0 && (
-                            <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-sm">
-                              {playerCount}
-                            </span>
+                            <div className="flex items-center gap-2 mb-4">
+                              <span className="bg-blue-500 text-white px-2 py-1 rounded-full text-sm">
+                                {playerCount}
+                              </span>
+                            </div>
                           )}
                         </div>
                         

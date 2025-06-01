@@ -69,7 +69,15 @@ export default function Dashboard() {
             console.log('Loaded active sessions:', activeGames?.length || 0);
           } catch (sessionError) {
             console.error('Error loading active sessions:', sessionError);
-            throw new Error('Failed to load active sessions: ' + sessionError.message);
+            
+            // Don't throw error for relationship issues, just set empty array
+            if (sessionError.message?.includes('relationship') || 
+                sessionError.message?.includes('schema cache')) {
+              console.log('Using empty active sessions array due to schema issue');
+              activeGames = [];
+            } else {
+              throw new Error('Failed to load active sessions: ' + sessionError.message);
+            }
           }
 
           setQuizzes(userQuizzes || []);
