@@ -9,27 +9,67 @@ export default function Layout({ children }) {
   const { theme, setTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        // Fetch profile from Supabase (assuming a 'profiles' table with 'avatar_url' and 'name')
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('name, avatar_url')
-          .eq('id', user.id)
-          .single();
-        setProfile(profileData);
-      } else {
+      setIsLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+        
+        if (user) {
+          // Try to fetch profile from Supabase
+          const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('name, avatar_url')
+            .eq('id', user.id)
+            .single();
+          
+          // If the profile exists, use it
+          if (profileData && !error) {
+            setProfile(profileData);
+          } else {
+            // If the profile doesn't exist or there was an error, create a fallback profile
+            console.warn('Profile not found or error fetching profile, using fallback data');
+            const fallbackProfile = {
+              name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+              avatar_url: null
+            };
+            
+            setProfile(fallbackProfile);
+            
+            // Try to create the profile for future use
+            try {
+              await supabase
+                .from('profiles')
+                .upsert([{ 
+                  id: user.id,
+                  name: fallbackProfile.name,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                }], { onConflict: 'id' });
+            } catch (createError) {
+              console.error('Failed to create profile:', createError);
+            }
+          }
+        } else {
+          setProfile(null);
+        }
+      } catch (error) {
+        console.error('Error in getUser:', error);
         setProfile(null);
+      } finally {
+        setIsLoading(false);
       }
     };
+    
     getUser();
+    
     const { data: listener } = supabase.auth.onAuthStateChange(() => {
       getUser();
     });
+    
     return () => {
       listener?.subscription.unsubscribe();
     };
