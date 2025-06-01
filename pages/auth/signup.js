@@ -22,6 +22,7 @@ export default function SignUp() {
     setError('');
 
     try {
+      // Step 1: Sign up with Supabase Auth
       const { data: { user }, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -34,18 +35,12 @@ export default function SignUp() {
 
       if (signUpError) throw signUpError;
 
-      // Create profile
-      if (user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{ id: user.id, name }]);
-
-        if (profileError) throw profileError;
-
-        addToast('Account created successfully! Please check your email for verification.', 'success', 5000);
-        router.push('/auth/verify-email');
-      }
+      // Step 2: The profile should be created automatically by the trigger
+      // But we can display a success message to the user
+      addToast('Account created successfully! Please check your email for verification.', 'success', 5000);
+      router.push('/auth/verify-email');
     } catch (err) {
+      console.error('Signup error:', err);
       setError(err.message);
       addToast(err.message, 'error');
     } finally {

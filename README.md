@@ -210,3 +210,34 @@ Steps to run this migration:
 2. Open your project
 3. Go to the SQL Editor
 4. Create a new query, paste the SQL above, and click "Run"
+
+### Handling Row-Level Security (RLS) Issues
+
+If you encounter "row violates row-level security policy" errors, you need to add additional policies or temporarily disable RLS. Run the following SQL:
+
+```sql
+-- Allow public read access to profiles (useful for leaderboards, user listings)
+CREATE POLICY "Anyone can view profiles"
+  ON public.profiles
+  FOR SELECT
+  USING (true);
+
+-- For admin operations, you can temporarily disable RLS
+-- Only do this when running migrations or repairs
+ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
+
+-- Run your repair operations here, for example:
+INSERT INTO public.profiles (id, name, created_at, updated_at)
+SELECT 
+  id, 
+  COALESCE(raw_user_meta_data->>'name', email),
+  NOW(),
+  NOW()
+FROM auth.users
+ON CONFLICT (id) DO NOTHING;
+
+-- Then re-enable RLS when done
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+```
+
+If you need administrative access to tables with RLS enabled, consider using a service role key or using Supabase's management APIs.
