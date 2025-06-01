@@ -43,7 +43,7 @@ export default function Layout({ children }) {
             <div className="flex">
               <Link href="/" className="flex items-center">
                 <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                  Kahoot Clone
+                  STEMuiz
                 </span>
               </Link>
             </div>

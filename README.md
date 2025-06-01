@@ -1,15 +1,15 @@
-# Kahoot Clone
+# STEMuiz
 
-A real-time quiz application inspired by Kahoot, built with Next.js, Socket.io, and MongoDB.
+A real-time quiz application for STEM subjects, built with Next.js, Socket.io, and MongoDB.
 
-![Kahoot Clone Screenshot](screenshot.png)
+![STEMuiz Screenshot](screenshot.png)
 
 ## Features
 
 - ✅ Real-time multiplayer quiz experience
 - ✅ Mobile-friendly responsive design
 - ✅ Host and player interfaces
-- ✅ Custom quiz creation
+- ✅ Custom quiz creation for STEM subjects
 - ✅ Multiple choice and true/false questions
 - ✅ Random question ordering
 - ✅ Leaderboards with real-time updates
@@ -36,8 +36,8 @@ A real-time quiz application inspired by Kahoot, built with Next.js, Socket.io, 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/kahoot-clone.git
-cd kahoot-clone
+git clone https://github.com/yourusername/stemuiz.git
+cd stemuiz
 ```
 
 ### 2. Install dependencies
@@ -146,7 +146,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- Inspired by [Kahoot!](https://kahoot.com/)
 - [Socket.io](https://socket.io/) for real-time communication
 - [Next.js](https://nextjs.org/) for the React framework
 - [Supabase](https://supabase.io/) for authentication

@@ -1,7 +1,7 @@
 {
-  "name": "kahoot-clone-server",
+  "name": "stemuiz-server",
   "version": "1.0.0",
-  "description": "Socket.io server for Kahoot Clone",
+  "description": "Socket.io server for STEMuiz",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

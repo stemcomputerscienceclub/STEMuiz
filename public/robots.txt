@@ -1,0 +1,11 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /auth/reset-password
+
+# Sitemap locations
+Sitemap: https://stemuiz.vercel.app/sitemap.xml
+Sitemap: https://stemuiz.vercel.app/api/sitemap 

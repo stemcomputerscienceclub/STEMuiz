@@ -1,0 +1,24 @@
+OPEN GRAPH IMAGE INSTRUCTIONS
+
+Create an og-image.png file with the following specifications:
+
+Dimensions: 1200 × 630 pixels
+Format: PNG (transparent background supported)
+File size: Keep under 1MB for fast loading
+
+Design recommendations:
+- Include the STEMuiz logo prominently
+- Use the text "Interactive STEM Quizzes" as a tagline
+- Include imagery related to science, technology, engineering, and mathematics
+- Use the same indigo color palette (#4f46e5) for consistency
+- Keep the design clean, modern, and visually appealing
+- Make sure text is readable at small sizes
+
+This image will be used for social media sharing on platforms like:
+- Facebook
+- Twitter
+- LinkedIn
+- Slack
+- WhatsApp
+
+Save the file as 'og-image.png' in the public directory. 

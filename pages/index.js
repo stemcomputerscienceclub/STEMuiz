@@ -5,6 +5,7 @@ import { faKey, faUser, faSignInAlt, faUserPlus, faSpinner } from '@fortawesome/
 import { db } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
+import SEO from '../components/SEO';
 
 export default function Home() {
   const router = useRouter();
@@ -129,104 +130,111 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-8 px-4 sm:px-6 lg:px-8">
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-3xl sm:text-4xl font-bold text-center text-white drop-shadow-lg mb-6"
-      >
-        Welcome to Kahoot Clone
-      </motion.h1>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 shadow-xl border border-white/20"
-      >
-        <form onSubmit={handleJoinGame} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-white mb-2 flex items-center gap-2">
-              <FontAwesomeIcon icon={faKey} /> Game PIN
-            </label>
-            <div className="flex space-x-2 justify-center">
-              {pinDigits.map((digit, idx) => (
-                <input
-                  key={idx}
-                  ref={el => inputRefs.current[idx] = el}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={e => handlePinChange(idx, e.target.value)}
-                  onKeyDown={e => handlePinKeyDown(idx, e)}
-                  onPaste={handlePinPaste}
-                  className="w-10 sm:w-12 h-12 sm:h-14 text-xl sm:text-2xl text-center rounded-lg bg-white/20 border border-white/30 text-white focus:outline-none focus:border-indigo-400 transition-all shadow-md"
-                  aria-label={`PIN digit ${idx + 1}`}
-                  disabled={isJoining}
-                />
-              ))}
+    <>
+      <SEO 
+        title="Join or Create STEM Quizzes"
+        description="Join a quiz game with a PIN or create your own interactive STEM quizzes for science, technology, engineering, and mathematics education."
+        keywords="join quiz, create quiz, STEM education, science quiz, classroom game, educational tool"
+      />
+      <div className="flex flex-col items-center justify-center min-h-[80vh] space-y-8 px-4 sm:px-6 lg:px-8">
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-3xl sm:text-4xl font-bold text-center text-white drop-shadow-lg mb-6"
+        >
+          Welcome to STEMuiz
+        </motion.h1>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md bg-white/10 backdrop-blur-lg rounded-2xl p-6 sm:p-8 shadow-xl border border-white/20"
+        >
+          <form onSubmit={handleJoinGame} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-white mb-2 flex items-center gap-2">
+                <FontAwesomeIcon icon={faKey} /> Game PIN
+              </label>
+              <div className="flex space-x-2 justify-center">
+                {pinDigits.map((digit, idx) => (
+                  <input
+                    key={idx}
+                    ref={el => inputRefs.current[idx] = el}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={e => handlePinChange(idx, e.target.value)}
+                    onKeyDown={e => handlePinKeyDown(idx, e)}
+                    onPaste={handlePinPaste}
+                    className="w-10 sm:w-12 h-12 sm:h-14 text-xl sm:text-2xl text-center rounded-lg bg-white/20 border border-white/30 text-white focus:outline-none focus:border-indigo-400 transition-all shadow-md"
+                    aria-label={`PIN digit ${idx + 1}`}
+                    disabled={isJoining}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-white mb-2 flex items-center gap-2">
-              <FontAwesomeIcon icon={faUser} /> Your Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-indigo-400 transition-all shadow-md"
-              placeholder="Enter your name"
-              required
-              disabled={isJoining}
-            />
-          </div>
-          {error && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-red-400 text-sm text-center"
-            >
-              {error}
-            </motion.p>
-          )}
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            type="submit"
-            disabled={isJoining}
-            className="w-full flex justify-center py-3 px-4 rounded-lg text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-lg gap-2 items-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isJoining ? (
-              <>
-                <FontAwesomeIcon icon={faSpinner} spin /> Joining...
-              </>
-            ) : (
-              <>
-                <FontAwesomeIcon icon={faSignInAlt} /> Join Game
-              </>
+            <div>
+              <label className="block text-sm font-medium text-white mb-2 flex items-center gap-2">
+                <FontAwesomeIcon icon={faUser} /> Your Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-white/50 focus:outline-none focus:border-indigo-400 transition-all shadow-md"
+                placeholder="Enter your name"
+                required
+                disabled={isJoining}
+              />
+            </div>
+            {error && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-red-400 text-sm text-center"
+              >
+                {error}
+              </motion.p>
             )}
-          </motion.button>
-        </form>
-        {!user && (
-          <div className="text-center mt-6 space-y-2">
-            <p className="text-white/80">Want to create your own quiz?</p>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
-              <a
-                href="/auth/signin"
-                className="text-indigo-300 hover:text-indigo-100 font-medium flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-indigo-300/30 hover:border-indigo-300/50 transition-all"
-              >
-                <FontAwesomeIcon icon={faSignInAlt} /> Sign in
-              </a>
-              <a
-                href="/auth/signup"
-                className="text-indigo-300 hover:text-indigo-100 font-medium flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-indigo-300/30 hover:border-indigo-300/50 transition-all"
-              >
-                <FontAwesomeIcon icon={faUserPlus} /> Sign up
-              </a>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              type="submit"
+              disabled={isJoining}
+              className="w-full flex justify-center py-3 px-4 rounded-lg text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-lg gap-2 items-center disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isJoining ? (
+                <>
+                  <FontAwesomeIcon icon={faSpinner} spin /> Joining...
+                </>
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faSignInAlt} /> Join Game
+                </>
+              )}
+            </motion.button>
+          </form>
+          {!user && (
+            <div className="text-center mt-6 space-y-2">
+              <p className="text-white/80">Want to create your own quiz?</p>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center">
+                <a
+                  href="/auth/signin"
+                  className="text-indigo-300 hover:text-indigo-100 font-medium flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-indigo-300/30 hover:border-indigo-300/50 transition-all"
+                >
+                  <FontAwesomeIcon icon={faSignInAlt} /> Sign in
+                </a>
+                <a
+                  href="/auth/signup"
+                  className="text-indigo-300 hover:text-indigo-100 font-medium flex items-center justify-center gap-2 py-2 px-4 rounded-lg border border-indigo-300/30 hover:border-indigo-300/50 transition-all"
+                >
+                  <FontAwesomeIcon icon={faUserPlus} /> Sign up
+                </a>
+              </div>
             </div>
-          </div>
-        )}
-      </motion.div>
-    </div>
+          )}
+        </motion.div>
+      </div>
+    </>
   );
 } 
