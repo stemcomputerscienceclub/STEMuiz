@@ -1,32 +1,39 @@
 import { Server } from 'socket.io';
 
-// Helper function to keep track of active connections
+// Helper function to handle Socket.IO in a serverless environment
 const ioHandler = (req, res) => {
-  // Check if Socket.IO server is already initialized
+  // Check if Socket.IO server is already initialized to prevent re-initialization
+  // This is critical for serverless functions to maintain state between invocations
   if (!res.socket.server.io) {
-    console.log('**** Initializing Socket.IO server ****');
+    console.log('**** Initializing Socket.IO server in serverless environment ****');
+    
+    // Log request details for debugging
+    console.log(`Request headers: ${JSON.stringify(req.headers)}`);
+    console.log(`Connection protocol: ${req.headers['x-forwarded-proto'] || 'unknown'}`);
+    console.log(`Connection host: ${req.headers['x-forwarded-host'] || req.headers.host || 'unknown'}`);
     
     // Create new Socket.IO instance
     const io = new Server(res.socket.server, {
       path: '/api/socket',
       addTrailingSlash: false,
-      // Socket.IO Configuration for Vercel Edge Functions
+      // Socket.IO Configuration optimized for Vercel serverless functions
       pingTimeout: 60000,
       pingInterval: 25000,
+      connectTimeout: 60000,
+      // Only use polling transport (no WebSockets in Vercel serverless)
       transports: ['polling'],
       cors: {
-        origin: process.env.NEXT_PUBLIC_APP_URL || ['http://localhost:3000', 'https://stemuiz.stemcsclub.org'],
-        methods: ['GET', 'POST'],
+        // Accept connections from multiple origins
+        origin: '*',
+        methods: ['GET', 'POST', 'OPTIONS'],
         credentials: true,
-        allowedHeaders: ['Authorization', 'X-Forwarded-Proto', 'X-Forwarded-Host'],
-        maxAge: 3600
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Forwarded-Proto', 'X-Forwarded-Host'],
+        maxAge: 86400
       },
       // Vercel-specific configuration
       allowEIO3: true,
       serveClient: false,
-      wsEngine: false,
-      // Disable WebSocket transport
-      transports: ['polling'],
+      cookie: false,
     });
 
     // Simple game session store
@@ -482,15 +489,19 @@ const ioHandler = (req, res) => {
     res.socket.server.io = io;
   }
 
-  // Return a successful response
-  res.end();
+  // Immediate success response required for Vercel serverless functions
+  res.status(200).end();
+  
+  // Log connection details
+  console.log(`Socket.IO handler completed for request ID: ${req.headers['x-vercel-id'] || 'unknown'}`);
 };
 
 export default ioHandler;
 
-// Configure for WebSockets
+// Configure API route for serverless Socket.IO
 export const config = {
   api: {
     bodyParser: false,
+    externalResolver: true, // Tell Next.js this is handled by Socket.IO
   },
-}; 
+};
