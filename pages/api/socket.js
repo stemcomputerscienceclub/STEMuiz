@@ -24,7 +24,7 @@ const ioHandler = (req, res) => {
       transports: ['polling'],
       cors: {
         // Accept connections from multiple origins
-        origin: '*',
+        origin: ['https://stemuiz.stemcsclub.org', 'http://localhost:3000'],
         methods: ['GET', 'POST', 'OPTIONS'],
         credentials: true,
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Forwarded-Proto', 'X-Forwarded-Host'],
@@ -32,8 +32,16 @@ const ioHandler = (req, res) => {
       },
       // Vercel-specific configuration
       allowEIO3: true,
+      allowEIO4: true,
       serveClient: false,
       cookie: false,
+      perMessageDeflate: false,
+      httpCompression: false,
+      // Allow query parameters in handshake
+      allowRequest: (req, callback) => {
+        // Accept all requests
+        callback(null, true);
+      }
     });
 
     // Simple game session store
