@@ -1,105 +1,175 @@
+// Socket.IO Client Test Script
 require('dotenv').config();
 const { io } = require('socket.io-client');
 const { v4: uuidv4 } = require('uuid');
 
-// Test parameters
-const sessionId = process.argv[2] || uuidv4();
-const role = process.argv[3] || 'host';
-const name = process.argv[4] || 'TestUser';
+// Configuration
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000';
+const SOCKET_PATH = '/api/socket';
+const TEST_SESSION_ID = process.env.TEST_SESSION_ID || uuidv4(); // Generate random session ID if not provided
+const TEST_PLAYER_NAME = 'TestPlayer';
 
-// Use localhost for testing
-const socketUrl = 'http://localhost:3000';
-const socketPath = '/api/socket';
+// Test different roles
+const roles = ['host', 'player'];
+let currentRoleIndex = 0;
 
-console.log('Socket.IO Connection Test');
-console.log('========================');
-console.log(`URL: ${socketUrl}`);
-console.log(`Path: ${socketPath}`);
-console.log(`Session ID: ${sessionId}`);
-console.log(`Role: ${role}`);
-console.log(`Name: ${name}`);
-console.log('========================\n');
-
-// Create socket with the same configuration as in the client
-const socket = io(socketUrl, {
-  query: { sessionId, role, name },
-  path: socketPath,
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  timeout: 20000,
-  transports: ['polling'],
-  upgrade: false,
-  forceNew: true,
-  withCredentials: true,
-});
-
-// Log all events for debugging
-socket.onAny((event, ...args) => {
-  console.log(`[${new Date().toISOString()}] Event: ${event}`, args);
-});
-
-// Connection events
-socket.on('connect', () => {
-  console.log(`[${new Date().toISOString()}] Connected successfully!`);
-  console.log(`Socket ID: ${socket.id}`);
-  console.log(`Transport: ${socket.io.engine.transport.name}`);
+// Create a socket connection
+const connectSocket = (role) => {
+  console.log(`\n----- Testing ${role.toUpperCase()} Connection -----`);
+  console.log(`Connecting to: ${SOCKET_URL}`);
+  console.log(`Socket path: ${SOCKET_PATH}`);
+  console.log(`Session ID: ${TEST_SESSION_ID}`);
+  console.log(`Role: ${role}`);
   
-  // Send a test message
-  if (role === 'host') {
-    console.log('Sending test host message...');
-    socket.emit('host:test', { message: 'Test from host' });
-  } else {
-    console.log('Sending test player message...');
-    socket.emit('player:test', { message: 'Test from player' });
+  if (role === 'player') {
+    console.log(`Player name: ${TEST_PLAYER_NAME}`);
   }
   
-  // Disconnect after 10 seconds
-  setTimeout(() => {
-    console.log('Test complete, disconnecting...');
-    socket.disconnect();
-    process.exit(0);
-  }, 10000);
-});
+  // Create socket with debugging configuration
+  const socket = io(SOCKET_URL, {
+    path: SOCKET_PATH,
+    query: { 
+      sessionId: TEST_SESSION_ID, 
+      role: role,
+      name: role === 'player' ? TEST_PLAYER_NAME : undefined,
+      timestamp: Date.now() // Add timestamp to prevent caching issues
+    },
+    reconnectionAttempts: 3,
+    reconnectionDelay: 1000,
+    timeout: 20000, // Increased timeout for serverless functions
+    transports: ['polling'],
+    upgrade: false, // Disable WebSocket upgrade
+    forceNew: true,
+    withCredentials: true,
+    autoConnect: true,
+    extraHeaders: {
+      "X-Test-Header": "true"
+    }
+  });
 
-socket.on('connect_error', (error) => {
-  console.error(`[${new Date().toISOString()}] Connection error:`, error.message);
-  console.log('Error details:', error);
-  console.log('Current transport:', socket.io?.engine?.transport?.name);
-  console.log('Transport options:', socket.io?.opts?.transports?.join(', '));
-  console.log('Connection query params:', JSON.stringify(socket.io?.opts?.query));
-  console.log('Extra headers:', JSON.stringify(socket.io?.opts?.extraHeaders));
+  // Connection events
+  socket.on('connect', () => {
+    console.log('✅ Connected successfully!');
+    console.log(`Socket ID: ${socket.id}`);
+    
+    // For host role, test creating a game session
+    if (role === 'host') {
+      console.log('Testing host functionality: Creating test game session...');
+      socket.emit('host:create-session', { 
+        sessionId: TEST_SESSION_ID,
+        gameTitle: 'Test Game',
+        questions: [
+          { question: 'Test Question 1', answers: ['A', 'B', 'C', 'D'], correctAnswer: 0 },
+          { question: 'Test Question 2', answers: ['A', 'B', 'C', 'D'], correctAnswer: 1 },
+        ]
+      });
+    }
+    // For player role, test joining a game session
+    else if (role === 'player') {
+      console.log('Testing player functionality: Joining test game session...');
+      socket.emit('player:join', { 
+        sessionId: TEST_SESSION_ID,
+        playerName: TEST_PLAYER_NAME
+      });
+    }
+  });
+
+  socket.on('connect_error', (err) => {
+    console.error('❌ Connection error:', err.message);
+    console.error('Error details:', err);
+    
+    // Log transport and connection details
+    if (socket.io) {
+      console.log(`Current transport: ${socket.io.engine?.transport?.name || 'unknown'}`);
+      console.log(`Transport options: ${socket.io.opts.transports.join(', ')}`);
+      console.log('Connection options:', JSON.stringify(socket.io.opts));
+    }
+    
+    // Provide helpful debug information based on error
+    if (err.message.includes('xhr poll error')) {
+      console.log('This appears to be a CORS or network issue:');
+      console.log('1. Check that your server is running');
+      console.log('2. Verify CORS settings on the server');
+      console.log('3. Check network connectivity');
+    } else if (err.message.includes('timeout')) {
+      console.log('Connection timed out:');
+      console.log('1. The server may be down or unresponsive');
+      console.log('2. Check firewall settings');
+      console.log('3. Try increasing the timeout value');
+    }
+  });
+
+  socket.io.on('reconnect_attempt', (attempt) => {
+    console.log(`🔄 Reconnection attempt ${attempt}...`);
+  });
+
+  socket.io.on('reconnect_failed', () => {
+    console.log('❌ Failed to reconnect after all attempts');
+    testNextRole();
+  });
+
+  // Game event responses
+  socket.on('host:session-created', (data) => {
+    console.log('✅ Host session created successfully:', data);
+    setTimeout(() => {
+      console.log('Disconnecting host...');
+      socket.disconnect();
+      testNextRole();
+    }, 2000);
+  });
+
+  socket.on('player:joined', (data) => {
+    console.log('✅ Player joined successfully:', data);
+    setTimeout(() => {
+      console.log('Disconnecting player...');
+      socket.disconnect();
+      console.log('\n✅ All tests completed!');
+      process.exit(0);
+    }, 2000);
+  });
+
+  // Error events
+  socket.on('error', (error) => {
+    console.error('❌ Server error:', typeof error === 'string' ? error : JSON.stringify(error));
+  });
+
+  // Catch custom error events
+  socket.on('host:error', (error) => {
+    console.error('❌ Host error:', typeof error === 'string' ? error : JSON.stringify(error));
+  });
+
+  socket.on('player:error', (error) => {
+    console.error('❌ Player error:', typeof error === 'string' ? error : JSON.stringify(error));
+  });
+
+  // Add event handlers for all possible game events for better testing
+  socket.on('game:state', (state) => {
+    console.log('Received game state:', state);
+  });
   
-  // Continue running to see if it eventually connects
-});
+  socket.on('leaderboard:update', (leaderboard) => {
+    console.log('Received leaderboard update:', leaderboard);
+  });
+  
+  return socket;
+};
 
-socket.io.on("reconnect_attempt", (attempt) => {
-  console.log(`[${new Date().toISOString()}] Reconnection attempt ${attempt}...`);
-});
+// Test next role in sequence
+function testNextRole() {
+  currentRoleIndex++;
+  if (currentRoleIndex < roles.length) {
+    const nextRole = roles[currentRoleIndex];
+    setTimeout(() => connectSocket(nextRole), 1000);
+  } else {
+    console.log('\n✅ All tests completed!');
+    process.exit(0);
+  }
+}
 
-socket.io.on("reconnect", (attempt) => {
-  console.log(`[${new Date().toISOString()}] Reconnected after ${attempt} attempts`);
-});
-
-socket.io.on("reconnect_error", (error) => {
-  console.log(`[${new Date().toISOString()}] Reconnection error:`, error.message);
-});
-
-socket.io.on("reconnect_failed", () => {
-  console.log(`[${new Date().toISOString()}] Reconnection failed after all attempts`);
-  process.exit(1);
-});
-
-// Handle server response
-socket.on('error', (error) => {
-  console.error(`[${new Date().toISOString()}] Server error:`, error);
-});
-
-// Handle process termination
-process.on('SIGINT', () => {
-  console.log('Interrupted, disconnecting socket...');
-  socket.disconnect();
-  process.exit(0);
-});
-
-console.log('Attempting to connect...');
+// Start testing with first role
+console.log('🧪 Starting Socket.IO Connection Test');
+console.log(`Using session ID: ${TEST_SESSION_ID}`);
+console.log(`Ensure your .env file has the correct NEXT_PUBLIC_SOCKET_URL (currently: ${SOCKET_URL})`);
+console.log(`Make sure your Next.js server is running at ${SOCKET_URL}`);
+console.log('\nPress Ctrl+C to abort the test\n');
+connectSocket(roles[currentRoleIndex]);

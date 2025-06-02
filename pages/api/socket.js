@@ -7,6 +7,18 @@ const ioHandler = (req, res) => {
   if (!res.socket.server.io) {
     console.log('**** Initializing Socket.IO server in serverless environment ****');
     
+    // Get allowed origins from environment or use defaults
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const allowedOrigins = [
+      'https://stemuiz.stemcsclub.org', 
+      'http://localhost:3000',
+      appUrl,
+      // Allow the request origin if it's in a development environment
+      process.env.NODE_ENV === 'development' ? req.headers.origin : null
+    ].filter(Boolean); // Remove null/undefined values
+    
+    console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
+    
     // Log request details for debugging
     console.log(`Request headers: ${JSON.stringify(req.headers)}`);
     console.log(`Connection protocol: ${req.headers['x-forwarded-proto'] || 'unknown'}`);
@@ -23,8 +35,15 @@ const ioHandler = (req, res) => {
       // Only use polling transport (no WebSockets in Vercel serverless)
       transports: ['polling'],
       cors: {
-        // Accept connections from multiple origins
-        origin: ['https://stemuiz.stemcsclub.org', 'http://localhost:3000'],
+        origin: (origin, callback) => {
+          // Allow requests with no origin (like mobile apps or curl requests)
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            console.warn(`Origin ${origin} not allowed by CORS policy`);
+            callback(null, false);
+          }
+        },
         methods: ['GET', 'POST', 'OPTIONS'],
         credentials: true,
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Forwarded-Proto', 'X-Forwarded-Host'],
@@ -39,9 +58,10 @@ const ioHandler = (req, res) => {
       httpCompression: false,
       // Allow query parameters in handshake
       allowRequest: (req, callback) => {
-        // Accept all requests
+        // Log request details for debugging
+        console.log(`Socket.IO connection attempt from: ${req.headers.origin || 'unknown origin'}`);
         callback(null, true);
-      }
+      },
     });
 
     // Simple game session store
