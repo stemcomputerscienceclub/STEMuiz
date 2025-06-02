@@ -10,15 +10,17 @@ const ioHandler = (req, res) => {
     const io = new Server(res.socket.server, {
       path: '/api/socket',
       addTrailingSlash: false,
-      // Socket.IO Configuration
-      pingTimeout: 30000,
-      pingInterval: 10000,
-      transports: ['websocket', 'polling'],
+      // Socket.IO Configuration for Vercel
+      pingTimeout: 60000, // Increased for Vercel's edge network
+      pingInterval: 25000, // Increased for better reliability
+      transports: ['polling'], // Only use polling for Vercel
       cors: {
         origin: process.env.NEXT_PUBLIC_APP_URL || ['http://localhost:3000', 'https://stemuiz.stemcsclub.org'],
         methods: ['GET', 'POST'],
-        credentials: true
-      }
+        credentials: true,
+        allowedHeaders: ['Authorization'],
+        maxAge: 3600
+      },
     });
 
     // Simple game session store
