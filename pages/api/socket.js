@@ -10,17 +10,23 @@ const ioHandler = (req, res) => {
     const io = new Server(res.socket.server, {
       path: '/api/socket',
       addTrailingSlash: false,
-      // Socket.IO Configuration for Vercel
-      pingTimeout: 60000, // Increased for Vercel's edge network
-      pingInterval: 25000, // Increased for better reliability
-      transports: ['polling'], // Only use polling for Vercel
+      // Socket.IO Configuration for Vercel Edge Functions
+      pingTimeout: 60000,
+      pingInterval: 25000,
+      transports: ['polling'],
       cors: {
         origin: process.env.NEXT_PUBLIC_APP_URL || ['http://localhost:3000', 'https://stemuiz.stemcsclub.org'],
         methods: ['GET', 'POST'],
         credentials: true,
-        allowedHeaders: ['Authorization'],
+        allowedHeaders: ['Authorization', 'X-Forwarded-Proto', 'X-Forwarded-Host'],
         maxAge: 3600
       },
+      // Vercel-specific configuration
+      allowEIO3: true,
+      serveClient: false,
+      wsEngine: false,
+      // Disable WebSocket transport
+      transports: ['polling'],
     });
 
     // Simple game session store
