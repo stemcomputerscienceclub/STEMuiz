@@ -14,14 +14,17 @@ app.get('/health', (req, res) => {
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    origin: process.env.NEXT_PUBLIC_APP_URL || ['http://localhost:3000', 'https://stemuiz.stemcsclub.org'],
     methods: ['GET', 'POST'],
+    credentials: true
   },
-  // Add better connection handling
+  // Socket.IO Configuration
+  path: '/socket.io',  // CRITICAL FIX: Ensure path matches client expectation
   pingTimeout: 30000,
   pingInterval: 10000,
   transports: ['websocket', 'polling'],
   allowEIO3: true,
+  maxHttpBufferSize: 1e8
 });
 
 // Simple game session store
