@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"node server/index.js\"",
+    "dev": "next dev",
     "build": "next build",
-    "start": "concurrently \"next start\" \"node server/index.js\"",
+    "start": "next start",
     "lint": "next lint",
     "deploy-migration": "node scripts/deploy-migrations.js"
   },
